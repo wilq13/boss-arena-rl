@@ -16,7 +16,7 @@ constexpr float ARENA_TOP = 360.f;
 constexpr float BOSS_LEFT = 120.f, BOSS_RIGHT = 1800.f, BOSS_BOTTOM = 340.f;
 
 struct Action {
-    int move; // 0 = стоять, 1..8 = направления
+    int move; // 0 = стоять, 1 - вверх: далее по часовой стрелке: 2 - вверх-вправо, ..., 8 - вверх-влево
     int aim; // 0..15, угол = aim * 2π/16
     bool shield; // желаемый режим
     bool fire;
