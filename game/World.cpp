@@ -91,6 +91,29 @@ StepResult World::step(const Action& a) {
 
     }
 
+    // пули: полет, попадание в босса, вылет за экран
+    m_Bullets.erase(
+        std::remove_if(m_Bullets.begin(), m_Bullets.end(),
+            [&](Projectile& b) {
+                Vec2& p = b.pos;
+                p.x += b.vel.x * m_Cfg.dt;
+                p.y += b.vel.y * m_Cfg.dt;
+
+                if (p.x > BOSS_LEFT && p.x < BOSS_RIGHT && p.y <= BOSS_BOTTOM) {
+                    m_Boss.hp -= m_Cfg.bulletPower;
+                    res.dmgToBoss += m_Cfg.bulletPower;
+                    return true;
+                }
+                if (p.x < 0 || p.x > SCREEN_W || p.y < 0 || p.y > SCREEN_H) return true;
+                return false; // пуля летит дальше
+            }),
+        m_Bullets.end());
+
+    if (m_Boss.hp <= 0) {
+        m_Boss.hp = 0;
+        res.bossKilled = true;
+    }
+
     ++m_Step;
     res.truncated = m_Step >= m_Cfg.maxSteps;
     return res;

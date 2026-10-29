@@ -20,6 +20,7 @@ int main() {
 
     // 3. еще 600 шагов вверх
     for (int i = 0; i < 600; ++i) w.step(up);
+    std::cout << "после ещё 600 шагов y = " << w.player().pos.y << " (ожидается 385)\n";
 
     // 4. детерминизм: второй мир с тем же seed
     World w2(cfg);
@@ -40,8 +41,26 @@ int main() {
         std::cout << "dir " << dir
                   << ": dx = " << w.player().pos.x - before.x
                   << ", dy = " << w.player().pos.y - before.y << '\n';
-    
-    }
-    
 
+    }
+
+    // 6. переключение режима: ровно switchSteps шагов
+    w.reset(42);
+    Action sh{0, 12, true, false};
+    for (int i = 0; i < 14; ++i) w.step(sh);
+    std::cout << "после 14 шагов щит: " << (w.player().mode == Mode::Shield) << " (ожидается 0)\n";
+    w.step(sh);
+    std::cout << "после 15 шагов щит: " << (w.player().mode == Mode::Shield) << " (ожидается 1)\n";
+
+    // 7. стрельба вверх 600 шагов: 48 попаданий долетают
+    w.reset(42);
+    Action fire{0, 12, false, true};
+    for (int i = 0; i < 600; ++i) w.step(fire);
+    std::cout << "HP босса после стрельбы: " << w.boss().hp << " (ожидается 1520)\n";
+
+    // 8. то же в режиме щита: стрелять нельзя
+    w.reset(42);
+    Action fireShield{0, 12, true, true};
+    for (int i = 0; i < 600; ++i) w.step(fireShield);
+    std::cout << "HP босса со щитом: " << w.boss().hp << " (ожидается 2000)\n";
 }
