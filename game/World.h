@@ -65,6 +65,8 @@ public:
     explicit World(const Config& cfg);
     void reset(uint32_t seed);
     StepResult step(const Action& a);
+    static constexpr int OBS_SIZE = 104;
+    void getObservation(float* out) const;
 
     // геттеры для Renderer
     const Config& config() const { return m_Cfg; }

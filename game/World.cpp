@@ -1,5 +1,6 @@
 #include "World.h"
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 
 World::World(const Config& cfg) : m_Cfg(cfg) { reset(0); }
@@ -47,6 +48,84 @@ void World::damagePlayer(float dmg, bool blockable, StepResult& res) {
     if (blockable && canBlock()) { dmg *= (1 - m_Cfg.shieldBlock); }
     m_Player.hp -= dmg;
     res.dmgTaken += dmg;
+}
+
+void World::getObservation(float* out) const {
+    float* o = out;
+    const Vec2 pp = m_Player.pos;
+
+    // игрок (6)
+    *o++ = pp.x / SCREEN_W;
+    *o++ = (pp.y - ARENA_TOP) / (SCREEN_H - ARENA_TOP);
+    *o++ = m_Player.hp / m_Cfg.playerHP;
+    *o++ = m_Player.mode == Mode::Shield ? 1.f : 0.f;
+    *o++ = static_cast<float>(m_Player.switchTimer) / m_Cfg.switchSteps;
+    *o++ = static_cast<float>(m_Player.fireCooldown) / m_Cfg.fireCooldown;
+
+    // босс (2) и время (1)
+    *o++ = m_Boss.hp / m_Cfg.bossHP;
+    *o++ = static_cast<float>(m_Boss.shotTimer) / m_Cfg.bossShotFreq;
+    *o++ = static_cast<float>(m_Step) / m_Cfg.maxSteps;
+
+    // щупальце (6): фаза one-hot, таймер фазы, края полосы относительно игрока
+    const Tentacle& t = m_Tentacle;
+    *o++ = t.phase == Tentacle::Phase::Idle ? 1.f : 0.f;
+    *o++ = t.phase == Tentacle::Phase::Warning ? 1.f : 0.f;
+    *o++ = t.phase == Tentacle::Phase::Strike ? 1.f : 0.f;
+    switch (t.phase) {
+    case Tentacle::Phase::Idle:
+        *o++ = static_cast<float>(m_Boss.tentacleTimer) / m_Cfg.bossTentacleFreq;
+        *o++ = 0.f;
+        *o++ = 0.f;
+        break;
+    case Tentacle::Phase::Warning:
+    case Tentacle::Phase::Strike: {
+        const int len = t.phase == Tentacle::Phase::Warning ? m_Cfg.bossTentacleWarning
+                                                            : m_Cfg.bossTentacleDuration;
+        *o++ = static_cast<float>(t.timer) / len;
+        *o++ = (t.col * CELL - pp.x) / SCREEN_W;
+        *o++ = ((t.col + 2) * CELL - pp.x) / SCREEN_W;
+        break;
+    }
+    }
+
+    // снаряды (8 × 5): ближайшие по расстоянию; сортируем индексы, сам m_Goo не трогаем
+    constexpr int K = 8;
+    std::vector<int> idx(m_Goo.size());
+    for (size_t i = 0; i < idx.size(); ++i) idx[i] = static_cast<int>(i);
+    auto dist2 = [&](int i) {
+        const float dx = m_Goo[i].pos.x - pp.x, dy = m_Goo[i].pos.y - pp.y;
+        return dx*dx + dy*dy;
+    };
+    std::sort(idx.begin(), idx.end(), [&](int a, int b) {
+        const float da = dist2(a), db = dist2(b);
+        return da != db ? da < db : a < b;   // при равенстве — по индексу, чтобы порядок был однозначным
+    });
+    for (int k = 0; k < K; ++k) {
+        if (k < static_cast<int>(idx.size())) {
+            const Projectile& g = m_Goo[idx[k]];
+            *o++ = 1.f;
+            *o++ = (g.pos.x - pp.x) / SCREEN_W;
+            *o++ = (g.pos.y - pp.y) / SCREEN_W;   // тот же масштаб, что у dx: геометрия не искажается
+            *o++ = g.vel.x / m_Cfg.bossShotSpeed;
+            *o++ = g.vel.y / m_Cfg.bossShotSpeed;
+        } else {
+            for (int j = 0; j < 5; ++j) *o++ = 0.f;
+        }
+    }
+
+    // окно 7×7 вокруг клетки игрока: 1 тёмная, 0 светлая, -1 за краем арены
+    const int pc = static_cast<int>(pp.x / CELL);
+    const int pr = static_cast<int>((pp.y - ARENA_TOP) / CELL);
+    for (int dr = -3; dr <= 3; ++dr) {
+        for (int dc = -3; dc <= 3; ++dc) {
+            const int c = pc + dc, r = pr + dr;
+            if (c < 0 || c >= COLS || r < 0 || r >= ROWS) *o++ = -1.f;
+            else *o++ = isDark(c, r) ? 1.f : 0.f;
+        }
+    }
+
+    assert(o - out == OBS_SIZE);
 }
 
 static constexpr float D = 0.7071f;

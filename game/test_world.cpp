@@ -1,4 +1,7 @@
+#include <algorithm>
+#include <cmath>
 #include <iostream>
+#include <random>
 #include "World.h"
 
 int main() {
@@ -96,4 +99,50 @@ int main() {
     while (!w4.step(standShield).playerDead) ++tentDeathShield;
     std::cout << "щупальце: смерть на шаге " << tentDeath << " (ожидается 1020), в щите "
               << tentDeathShield << " (ожидается 4140)\n";
+
+    // 12. наблюдение на старте
+    float obs[World::OBS_SIZE];
+    constexpr int WIN = 55;   // начало окна 7×7: 6 + 2 + 1 + 6 + 8*5
+    w.reset(42);
+    w.getObservation(obs);
+    std::cout << "obs на старте: x=" << obs[0] << " (0.5), y=" << obs[1] << " (0.917), hp=" << obs[2]
+              << " (1), босс=" << obs[6] << " (1), время=" << obs[8] << " (0), idle=" << obs[9]
+              << " (1), центр окна=" << obs[WIN + 24] << " (0), снаряд 0=" << obs[15] << " (0)\n";
+
+    // 13. наблюдение: все значения конечны и в [-1, 1] на 200 эпизодах случайного агента
+    std::mt19937 actRng(1);
+    float lo = 1e9f, hi = -1e9f;
+    long nonFinite = 0, obsCount = 0;
+    for (uint32_t e = 0; e < 200; ++e) {
+        w.reset(e);
+        StepResult r;
+        do {
+            Action a{static_cast<int>(actRng() % 9), static_cast<int>(actRng() % 16),
+                     actRng() % 2 == 1, actRng() % 2 == 1};
+            r = w.step(a);
+            w.getObservation(obs);
+            ++obsCount;
+            for (float v : obs) {
+                if (!std::isfinite(v)) ++nonFinite;
+                lo = std::min(lo, v);
+                hi = std::max(hi, v);
+            }
+        } while (!(r.bossKilled || r.playerDead || r.truncated));
+    }
+    std::cout << "obs: " << obsCount << " наблюдений, не конечных " << nonFinite << " (0), диапазон ["
+              << lo << ", " << hi << "] (в пределах [-1, 1])\n";
+
+    // 14. окно 7×7 в левом нижнем углу: 3 колонки слева и 3 ряда снизу за краем
+    w3.reset(42);
+    for (int i = 0; i < 300; ++i) w3.step(Action{6, 12, false, false});
+    w3.getObservation(obs);
+    std::cout << "окно 7×7 в углу (x = за краем, # = тёмная):\n";
+    for (int r = 0; r < 7; ++r) {
+        std::cout << "  ";
+        for (int c = 0; c < 7; ++c) {
+            const float v = obs[WIN + r * 7 + c];
+            std::cout << (v < 0 ? 'x' : v > 0 ? '#' : '.');
+        }
+        std::cout << '\n';
+    }
 }
