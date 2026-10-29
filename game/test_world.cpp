@@ -73,4 +73,14 @@ int main() {
     int death2 = 0;
     while (!w2.step(stand).playerDead) ++death2;
     std::cout << "смерть на шаге " << death + 1 << " и " << death2 + 1 << " (ожидается 1037 оба раза)\n";
+
+    // 10. тёмные клетки без снарядов: в ряду 11 колонка 9 тёмная
+    Config calm;
+    calm.bossShotFreq = 1000000;   // босс не стреляет
+    World w3(calm);
+    w3.reset(42);
+    Action left{7, 12, false, false};
+    for (int i = 0; i < 59; ++i) w3.step(left);
+    for (int i = 0; i < 60; ++i) w3.step(stand);
+    std::cout << "HP на тёмной клетке: " << w3.player().hp << " (ожидается ~89)\n";
 }

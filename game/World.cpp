@@ -157,6 +157,11 @@ StepResult World::step(const Action& a) {
             }),
         m_Goo.end());
 
+    // темные клетки: урон, пока стоишь, щит не помогает
+    const int col = static_cast<int>(m_Player.pos.x / CELL);
+    const int row = static_cast<int>((m_Player.pos.y - ARENA_TOP) / CELL);
+    if (isDark(col, row)) damagePlayer(m_Cfg.darkSquaresPower * m_Cfg.dt, false, res);
+
     if (m_Player.hp <= 0) {
         m_Player.hp = 0;
         res.playerDead = true;
