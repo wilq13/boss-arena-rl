@@ -43,6 +43,12 @@ void World::reset(uint32_t seed) {
 
 }
 
+void World::damagePlayer(float dmg, bool blockable, StepResult& res) {
+    if (blockable && canBlock()) { dmg *= (1 - m_Cfg.shieldBlock); }
+    m_Player.hp -= dmg;
+    res.dmgTaken += dmg;
+}
+
 static constexpr float D = 0.7071f;
 static const Vec2 DIRS[9] = { {0, 0}, {0, -1}, {D, -D}, {1, 0}, {D, D}, {0, 1}, {-D, D}, {-1, 0}, {-D, -D}};
 
@@ -112,6 +118,48 @@ StepResult World::step(const Action& a) {
     if (m_Boss.hp <= 0) {
         m_Boss.hp = 0;
         res.bossKilled = true;
+    }
+
+    // снаряды босса: выстрел
+    if (--m_Boss.shotTimer <= 0) {
+        m_Boss.shotTimer = m_Cfg.bossShotFreq;
+
+        std::uniform_real_distribution<float> xDist(BOSS_LEFT, BOSS_RIGHT);
+        Projectile g;
+        g.pos = {xDist(m_Rng), BOSS_BOTTOM};
+
+        // направление на игрока:
+        const float dx = m_Player.pos.x - g.pos.x;
+        const float dy = m_Player.pos.y - g.pos.y;
+        const float len = std::sqrt(dx*dx + dy*dy);
+        g.vel.x = dx / len * m_Cfg.bossShotSpeed;
+        g.vel.y = dy / len * m_Cfg.bossShotSpeed;
+        m_Goo.push_back(g);
+    }
+
+    // снаряды босса: полёт, попадание в игрока, вылет за экран
+    const float hitR = m_Cfg.bossShotRadius + m_Cfg.playerRadius;
+    m_Goo.erase(
+        std::remove_if(m_Goo.begin(), m_Goo.end(),
+            [&](Projectile& g) {
+                Vec2& p = g.pos;
+                p.x += g.vel.x * m_Cfg.dt;
+                p.y += g.vel.y * m_Cfg.dt;
+
+                const float dx = p.x - m_Player.pos.x;
+                const float dy = p.y - m_Player.pos.y;
+                if (dx*dx + dy*dy < hitR * hitR) {
+                    damagePlayer(m_Cfg.bossShotPower, true, res);
+                    return true;
+                }
+                if (p.x < 0 || p.x > SCREEN_W || p.y < 0 || p.y > SCREEN_H) return true;
+                return false; // снаряд летит дальше
+            }),
+        m_Goo.end());
+
+    if (m_Player.hp <= 0) {
+        m_Player.hp = 0;
+        res.playerDead = true;
     }
 
     ++m_Step;

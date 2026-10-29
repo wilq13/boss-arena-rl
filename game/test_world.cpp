@@ -63,4 +63,14 @@ int main() {
     Action fireShield{0, 12, true, true};
     for (int i = 0; i < 600; ++i) w.step(fireShield);
     std::cout << "HP босса со щитом: " << w.boss().hp << " (ожидается 2000)\n";
+
+    // 9. смерть без щита: шаг детерминирован
+    Action stand{0, 12, false, false};
+    w.reset(42);
+    int death = 0;
+    while (!w.step(stand).playerDead) ++death;
+    w2.reset(42);
+    int death2 = 0;
+    while (!w2.step(stand).playerDead) ++death2;
+    std::cout << "смерть на шаге " << death + 1 << " и " << death2 + 1 << " (ожидается 1037 оба раза)\n";
 }

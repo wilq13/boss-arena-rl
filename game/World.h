@@ -87,4 +87,7 @@ private:
     std::mt19937 m_Rng;
     int m_Step;
     bool canShoot() const { return m_Player.mode == Mode::Gun && m_Player.switchTimer == 0; }
+    bool canBlock() const { return m_Player.mode == Mode::Shield &&
+                                   m_Player.switchTimer == 0; }
+    void damagePlayer(float dmg, bool blockable, StepResult& res);
 };
