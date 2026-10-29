@@ -86,4 +86,5 @@ private:
     std::array<uint8_t, COLS * ROWS> m_Dark;
     std::mt19937 m_Rng;
     int m_Step;
+    bool canShoot() const { return m_Player.mode == Mode::Gun && m_Player.switchTimer == 0; }
 };

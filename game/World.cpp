@@ -1,5 +1,6 @@
 #include "World.h"
 #include <algorithm>
+#include <cmath>
 
 World::World(const Config& cfg) : m_Cfg(cfg) { reset(0); }
 
@@ -73,6 +74,22 @@ StepResult World::step(const Action& a) {
     const float r = m_Cfg.playerRadius;
     m_Player.pos.x = std::clamp(m_Player.pos.x, r, SCREEN_W - r);
     m_Player.pos.y = std::clamp(m_Player.pos.y, ARENA_TOP + r, SCREEN_H - r);
+
+    // выстрел
+    if (m_Player.fireCooldown > 0) --m_Player.fireCooldown;
+
+    if (a.fire && canShoot() && m_Player.fireCooldown == 0) {
+        const float angle = m_Player.aim * 2.f * 3.14159265f / 16.f;
+
+        Projectile b;
+        b.pos = m_Player.pos;
+        b.vel.x = std::cos(angle) * m_Cfg.bulletSpeed;
+        b.vel.y = std::sin(angle) * m_Cfg.bulletSpeed;
+
+        m_Bullets.push_back(b);
+        m_Player.fireCooldown = m_Cfg.fireCooldown;
+
+    }
 
     ++m_Step;
     res.truncated = m_Step >= m_Cfg.maxSteps;
