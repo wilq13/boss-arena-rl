@@ -157,6 +157,41 @@ StepResult World::step(const Action& a) {
             }),
         m_Goo.end());
 
+    // щупальце
+    Tentacle& t = m_Tentacle;
+    if (--m_Boss.tentacleTimer <= 0) {
+        m_Boss.tentacleTimer = m_Cfg.bossTentacleFreq;
+        t.phase = Tentacle::Phase::Warning;
+        t.timer = m_Cfg.bossTentacleWarning;
+        t.hitDone = false;
+
+        t.col = static_cast<int>(std::lround(m_Player.pos.x / CELL) - 1);
+        t.col = std::clamp(t.col, 0, COLS - 2);
+    }
+
+    switch (t.phase) {
+    case Tentacle::Phase::Idle:
+        break;
+    case Tentacle::Phase::Warning:
+        if (--t.timer <= 0) {
+            t.phase = Tentacle::Phase::Strike;
+            t.timer = m_Cfg.bossTentacleDuration;
+        }
+        break;
+    case Tentacle::Phase::Strike: {
+        // круг игрока пересекает полосу из 2 колонок; по y щупальце накрывает всю арену
+        const float left = t.col * CELL;
+        const float right = (t.col + 2) * CELL;
+        const float x = m_Player.pos.x;
+        if (!t.hitDone && x + r > left && x - r < right) {
+            damagePlayer(m_Cfg.bossTentaclePower, true, res);
+            t.hitDone = true;
+        }
+        if (--t.timer <= 0) t.phase = Tentacle::Phase::Idle;
+        break;
+    }
+    }
+
     // темные клетки: урон, пока стоишь, щит не помогает
     const int col = static_cast<int>(m_Player.pos.x / CELL);
     const int row = static_cast<int>((m_Player.pos.y - ARENA_TOP) / CELL);

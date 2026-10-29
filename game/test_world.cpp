@@ -72,7 +72,7 @@ int main() {
     w2.reset(42);
     int death2 = 0;
     while (!w2.step(stand).playerDead) ++death2;
-    std::cout << "смерть на шаге " << death + 1 << " и " << death2 + 1 << " (ожидается 1037 оба раза)\n";
+    std::cout << "смерть на шаге " << death + 1 << " и " << death2 + 1 << " (ожидается 540 оба раза)\n";
 
     // 10. тёмные клетки без снарядов: в ряду 11 колонка 9 тёмная
     Config calm;
@@ -83,4 +83,17 @@ int main() {
     for (int i = 0; i < 59; ++i) w3.step(left);
     for (int i = 0; i < 60; ++i) w3.step(stand);
     std::cout << "HP на тёмной клетке: " << w3.player().hp << " (ожидается ~89)\n";
+
+    // 11. только щупальце: без снарядов и тёмных клеток, стоять на старте
+    calm.darkSquaresProportion = 0.f;   // после w3: World копирует Config в конструкторе
+    World w4(calm);
+    w4.reset(42);
+    int tentDeath = 1;
+    while (!w4.step(stand).playerDead) ++tentDeath;
+    w4.reset(42);
+    Action standShield{0, 12, true, false};
+    int tentDeathShield = 1;
+    while (!w4.step(standShield).playerDead) ++tentDeathShield;
+    std::cout << "щупальце: смерть на шаге " << tentDeath << " (ожидается 1020), в щите "
+              << tentDeathShield << " (ожидается 4140)\n";
 }
