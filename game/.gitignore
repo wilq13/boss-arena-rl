@@ -1,3 +1,4 @@
 *.o
 boss_arena
 test_world
+bench
