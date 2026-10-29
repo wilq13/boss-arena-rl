@@ -47,6 +47,25 @@ static const Vec2 DIRS[9] = { {0, 0}, {0, -1}, {D, -D}, {1, 0}, {D, D}, {0, 1}, 
 
 StepResult World::step(const Action& a) {
     StepResult res;
+    m_Player.aim = a.aim;
+
+    // переключение режима
+    const Mode desired = a.shield ? Mode::Shield : Mode::Gun;
+
+    if (desired == m_Player.mode) {
+        // хотим остаться в текущем режиме: отменяем переключение
+        m_Player.targetMode = m_Player.mode;
+        m_Player.switchTimer = 0;
+    } else if (desired != m_Player.targetMode) {
+        // захотели новый режим: запускаем переключение
+        m_Player.targetMode = desired;
+        m_Player.switchTimer = m_Cfg.switchSteps;
+    }
+    if (m_Player.switchTimer > 0) {
+        --m_Player.switchTimer;
+        if (m_Player.switchTimer == 0) m_Player.mode = m_Player.targetMode;
+    }
+
     const Vec2& d = DIRS[a.move];
     m_Player.pos.x += d.x * m_Cfg.playerSpeed * m_Cfg.dt;
     m_Player.pos.y += d.y * m_Cfg.playerSpeed * m_Cfg.dt;
