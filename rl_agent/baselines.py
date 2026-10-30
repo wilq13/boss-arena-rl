@@ -47,6 +47,39 @@ def random_policy(seed):
     return policy
 
 
+R = 25 / 1920  # радиус игрока в единицах наблюдения
+
+
+def dodge_tentacle(obs):
+    warn, strike = obs[10], obs[11]
+    left, right = obs[13], obs[14]  # края полосы минус x игрока
+    # края имеют смысл только в Warning/Strike: в Idle они нулевые и условие было бы истинным
+    if (warn or strike) and left < R and right > -R:
+        if -left < right:  # до левого края ближе
+            return 7       # влево
+        return 3           # вправо
+    return 0
+
+
+def scripted_policy(seed, tentacle=True, goo=True, dark=True):
+    # seed не нужен (бот детерминирован), но интерфейс policy_factory(seed) общий
+    def policy(obs):
+        move = 0
+        if tentacle and move == 0:
+            move = dodge_tentacle(obs)
+        # goo и dark — следующими правилами, каждое своим if ... and move == 0
+        return np.array([move, 12, 0, 1])  # стрелять вверх всегда
+    return policy
+
+
 if __name__ == "__main__":
-    r = evaluate(BossArenaEnv, random_policy)
-    print(r)
+    agents = {
+        "random": random_policy,
+        "stand+fire": lambda s: scripted_policy(s, tentacle=False, goo=False, dark=False),
+        "+tentacle": lambda s: scripted_policy(s, goo=False, dark=False),
+    }
+    print(f"{'агент':<12} {'побед':>6} {'шагов':>7} {'награда':>8} {'урон':>7}")
+    for name, factory in agents.items():
+        r = evaluate(BossArenaEnv, factory)
+        print(f"{name:<12} {r['win_rate']:>6.0%} {r['win_steps']:>7.0f} "
+              f"{r['reward']:>8.2f} {r['boss_dmg']:>7.1f}")
