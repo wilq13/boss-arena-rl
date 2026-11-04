@@ -88,6 +88,35 @@ def escape_dark(obs):
     return 0
 
 
+def find_threat(obs):
+    observation = obs[15:55].reshape(8, 5)
+    dangerous_bullets = []
+    for i in range(8):
+        if (observation[i][0] == 0):
+            continue
+
+        dx = observation[i][1] * 1920
+        dy = observation[i][2] * 1920
+        vx = observation[i][3] * 500
+        vy = observation[i][4] * 500
+
+        t = -(dx * vx + dy * vy) / ( vx * vx + vy * vy)
+        if (0 < t <= 0.35):
+            qx = dx + vx*t
+            qy = dy + vy*t
+            if (qx*qx +qy*qy < 55*55):
+                dangerous_bullets.append((t, (dx, dy, vx, vy)))
+        
+    if (dangerous_bullets):
+        most_dangerous = min(dangerous_bullets, key=lambda item: item[0])
+        return most_dangerous[1]
+    return None
+    
+
+
+
+
+
 if __name__ == "__main__":
     agents = {
         "random": random_policy,
