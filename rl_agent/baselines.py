@@ -67,7 +67,8 @@ def scripted_policy(seed, tentacle=True, goo=True, dark=True):
         move = 0
         if tentacle and move == 0:
             move = dodge_tentacle(obs)
-        # goo — следующее правило, с условием goo and move == 0
+        if goo and move == 0:
+            move = dodge_goo(obs)
         if dark and move == 0:
             move = escape_dark(obs)
         return np.array([move, 12, 0, 1])  # стрелять вверх всегда
@@ -117,6 +118,10 @@ def dodge_goo(obs):
     observation = find_threat(obs)
     if (observation == None) : return 0
 
+    x = obs[0] * 1920
+    if (x - 140 < 25): return 3
+    if (x + 140 > 1895): return 7
+
     dx = observation[0]
     dy = observation[1]
     vx = observation[2]
@@ -147,6 +152,7 @@ if __name__ == "__main__":
         "stand+fire": lambda s: scripted_policy(s, tentacle=False, goo=False, dark=False),
         "+tentacle": lambda s: scripted_policy(s, goo=False, dark=False),
         "+dark": lambda s: scripted_policy(s, goo=False),
+        "+goo": scripted_policy,
     }
     print(f"{'агент':<12} {'побед':>6} {'шагов':>7} {'награда':>8} {'урон':>7}")
     for name, factory in agents.items():
