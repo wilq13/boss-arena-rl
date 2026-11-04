@@ -67,9 +67,25 @@ def scripted_policy(seed, tentacle=True, goo=True, dark=True):
         move = 0
         if tentacle and move == 0:
             move = dodge_tentacle(obs)
-        # goo и dark — следующими правилами, каждое своим if ... and move == 0
+        # goo — следующее правило, с условием goo and move == 0
+        if dark and move == 0:
+            move = escape_dark(obs)
         return np.array([move, 12, 0, 1])  # стрелять вверх всегда
     return policy
+
+
+def escape_dark(obs):
+    observation = obs[55:].reshape(7, 7)
+    if observation[3][3] != 1:
+        return 0
+
+    # Номера движений для соседей: верхний, средний и нижний ряды.
+    directions = ((8, 1, 2), (7, 0, 3), (6, 5, 4))
+    for i in range(2, 5):
+        for j in range(2, 5):
+            if observation[i][j] == 0:
+                return directions[i - 2][j - 2]
+    return 0
 
 
 if __name__ == "__main__":
@@ -77,6 +93,7 @@ if __name__ == "__main__":
         "random": random_policy,
         "stand+fire": lambda s: scripted_policy(s, tentacle=False, goo=False, dark=False),
         "+tentacle": lambda s: scripted_policy(s, goo=False, dark=False),
+        "+dark": lambda s: scripted_policy(s, goo=False),
     }
     print(f"{'агент':<12} {'побед':>6} {'шагов':>7} {'награда':>8} {'урон':>7}")
     for name, factory in agents.items():
