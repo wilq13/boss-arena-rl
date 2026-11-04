@@ -2,7 +2,7 @@ from stable_baselines3 import PPO
 from boss_arena_env import BossArenaEnv
 from baselines import evaluate
 
-model = PPO.load("models/ppo_smoke", device="cpu")
+model = PPO.load("models/ppo_500k", device="cpu")
 
 
 def sb3_policy(seed):
