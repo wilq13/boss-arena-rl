@@ -113,6 +113,30 @@ def find_threat(obs):
     return None
     
 
+def dodge_goo(obs):
+    observation = find_threat(obs)
+    if (observation == None) : return 0
+
+    dx = observation[0]
+    dy = observation[1]
+    vx = observation[2]
+    vy = observation[3]
+
+    ux_left = -400
+    ux_right = 400
+    rx_left = vx - ux_left
+    rx_right = vx - ux_right
+    ry = vy
+
+    t_left = np.clip(-(dx*rx_left + dy*ry) / (rx_left*rx_left + ry*ry)
+                     , 0.0, 0.35)
+    t_right = np.clip(-(dx*rx_right + dy*ry) / (rx_right*rx_right + ry*ry)
+                      , 0.0, 0.35)
+
+    distance_sq_left = (dx + rx_left*t_left)**2 + (dy + ry*t_left)**2
+    distance_sq_right = (dx + rx_right*t_right)**2 + (dy + ry*t_right)**2
+
+    return 7 if distance_sq_left > distance_sq_right else 3
 
 
 
