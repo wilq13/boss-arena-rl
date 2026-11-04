@@ -1,8 +1,8 @@
 from stable_baselines3 import PPO
-from boss_arena_env import BossArenaEnv
+from curriculum import make_easy_env
 from baselines import evaluate
 
-model = PPO.load("models/ppo_500k", device="cpu")
+model = PPO.load("models/ppo_easy_500k", device="cpu")
 
 
 def sb3_policy(seed):
@@ -11,5 +11,5 @@ def sb3_policy(seed):
         return action
     return policy
 
-result = evaluate(BossArenaEnv, sb3_policy)
+result = evaluate(make_easy_env, sb3_policy)
 print(result)
