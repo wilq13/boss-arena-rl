@@ -44,3 +44,10 @@ def make_projectiles_intro_env():
     config.maxSteps = 3600
 
     return BossArenaEnv(config=config)
+
+
+def make_attacks_env():
+    config = bac.Config()
+    config.darkSquaresProportion = 0.0
+
+    return BossArenaEnv(config=config)
