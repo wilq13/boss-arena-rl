@@ -51,3 +51,12 @@ def make_attacks_env():
     config.darkSquaresProportion = 0.0
 
     return BossArenaEnv(config=config)
+
+
+def make_attacks_intro_env():
+    config = bac.Config()
+    config.bossHP = 1000.0
+    config.maxSteps = 3600
+    config.darkSquaresProportion = 0.0
+
+    return BossArenaEnv(config=config)

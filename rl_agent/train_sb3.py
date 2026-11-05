@@ -2,9 +2,9 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.env_checker import check_env
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.callbacks import CheckpointCallback
-from curriculum import make_attacks_env
+from curriculum import make_attacks_intro_env
 
-env = make_attacks_env()
+env = make_attacks_intro_env()
 
 check_env(env)
 
@@ -19,12 +19,12 @@ model = PPO.load(
 
 checkpoint = CheckpointCallback(
         save_freq=100_000,
-        save_path="models/attacks_checkpoints",
+        save_path="models/attacks_intro_checkpoints",
         name_prefix="ppo",
 )
 
 model.learn(total_timesteps=500_000, reset_num_timesteps=False,
             callback=checkpoint)
-model.save("models/ppo_attacks")
+model.save("models/ppo_attacks_intro")
 env.close()
 
