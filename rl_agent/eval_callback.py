@@ -8,7 +8,7 @@ class WinRateEvalCallback(BaseCallback):
 
         self.eval_freq = eval_freq
         self.best_model_path = best_model_path
-        self.eval_seeds = range(20000, 20030)
+        self.eval_seeds = range(20000, 20100)
         self.best_win_rate = -1.0
 
     def _evaluate_model(self):
@@ -55,6 +55,7 @@ class WinRateEvalCallback(BaseCallback):
         self.logger.record(
                 "tentacle/boss_dmg", tentacle_result["boss_dmg"]
         )
+        self.logger.record("time/total_timesteps", self.num_timesteps)
         self.logger.dump(step=self.num_timesteps)
 
         print(f"Оценка: победы {result['win_rate']:.1%}")
