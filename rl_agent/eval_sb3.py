@@ -2,7 +2,7 @@ from stable_baselines3 import PPO
 from curriculum import make_projectiles_env
 from baselines import evaluate
 
-model = PPO.load("models/ppo_projectiles_2000hp", device="cpu")
+model = PPO.load("models/ppo_projectiles_2000hp_more", device="cpu")
 
 
 def sb3_policy(seed):
