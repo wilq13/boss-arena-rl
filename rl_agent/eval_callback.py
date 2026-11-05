@@ -1,6 +1,6 @@
 from stable_baselines3.common.callbacks import BaseCallback
 from baselines import evaluate
-from curriculum import make_attacks_env
+from curriculum import make_attacks_env, make_tentacle_only_env
 
 class WinRateEvalCallback(BaseCallback):
     def __init__(self, eval_freq, best_model_path):
@@ -26,6 +26,12 @@ class WinRateEvalCallback(BaseCallback):
                 seeds=self.eval_seeds,
         )
 
+        tentacle_result = evaluate(
+                make_tentacle_only_env,
+                policy_factory,
+                seeds=range(20000, 20001),
+        )
+
         self.logger.record("eval/win_rate", result["win_rate"])
         self.logger.record("eval/mean_reward", result["reward"])
         self.logger.record("eval/win_steps", result["win_steps"])
@@ -37,6 +43,18 @@ class WinRateEvalCallback(BaseCallback):
                 f"eval/loss_damage_from_{source}",
                 result["loss_damage_by_source"][source],
             )
+        self.logger.record(
+                "tentacle/win_rate", tentacle_result["win_rate"]
+        )
+        self.logger.record(
+                "tentacle/mean_reward", tentacle_result["reward"]
+        )
+        self.logger.record(
+                "tentacle/damage_taken", tentacle_result["damage_taken"]
+        )
+        self.logger.record(
+                "tentacle/boss_dmg", tentacle_result["boss_dmg"]
+        )
         self.logger.dump(step=self.num_timesteps)
 
         print(f"Оценка: победы {result['win_rate']:.1%}")
