@@ -22,6 +22,8 @@ def run_episode(env, seed, policy):
 
 def evaluate(env_factory, policy_factory, seeds=EVAL_SEEDS):
     wins, win_steps, rewards, boss_dmg = 0, [], [], []
+    deaths, timeouts = 0, 0
+    loss_steps, loss_boss_hp = [], []
     for seed in seeds:
         env = env_factory()
         policy = policy_factory(seed)  # новая стратегия на каждый эпизод
@@ -29,6 +31,16 @@ def evaluate(env_factory, policy_factory, seeds=EVAL_SEEDS):
         if info["is_success"]:
             wins += 1
             win_steps.append(steps)
+        else:
+            if terminated:
+                deaths += 1
+            else:
+                timeouts += 1
+
+            loss_steps.append(steps)
+            boss_hp_pct = float(env.world.observe()[6]) * 100
+            loss_boss_hp.append(boss_hp_pct)
+
         rewards.append(total)
         boss_dmg.append(dmg)
 
@@ -37,6 +49,14 @@ def evaluate(env_factory, policy_factory, seeds=EVAL_SEEDS):
         "win_steps": np.mean(win_steps) if win_steps else float("nan"),
         "reward": np.mean(rewards),
         "boss_dmg": np.mean(boss_dmg),
+        "deaths": deaths,
+        "timeouts": timeouts,
+        "loss_steps": (
+            np.mean(loss_steps) if loss_steps else float("nan")
+        ),
+        "loss_boss_hp_pct": (
+            np.mean(loss_boss_hp) if loss_boss_hp else float("nan")
+        ),
     }
 
 
