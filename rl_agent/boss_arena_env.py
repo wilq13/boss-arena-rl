@@ -30,6 +30,9 @@ class BossArenaEnv(gym.Env):
         terminated = r.bossKilled or r.playerDead
         truncated = r.truncated and not terminated
         info = {"dmg_to_boss" : r.dmgToBoss, "dmg_taken" : r.dmgTaken,
+                "dmg_from_goo": r.dmgFromGoo,
+                "dmg_from_tentacle": r.dmgFromTentacle,
+                "dmg_from_dark": r.dmgFromDark,
                 "is_success" : r.bossKilled}
         obs = self.world.observe()
         return (obs, reward, terminated, truncated, info)

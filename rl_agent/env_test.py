@@ -37,4 +37,52 @@ c2 = run_episode(BossArenaEnv(), 0, random_policy(2))
 
 assert a[:2] == b[:2], (a[:2], b[:2])
 assert a[:2] != c2[:2]
+for result in (a, b, c2):
+    info = result[3]
+    assert np.isclose(
+        sum(info["episode_damage_by_source"].values()), info["episode_damage_taken"]
+    ), info
+
+
+def check_damage_source(source, shield):
+    config = bac.Config()
+    config.bossShotFreq = 48 if source == "goo" else 10**6
+    config.bossTentacleFreq = 240 if source == "tentacle" else 10**6
+    config.darkSquaresProportion = 1.0 if source == "dark" else 0.0
+    env = BossArenaEnv(config=config)
+    env.reset(seed=42)
+    try:
+        # Включаем щит на безопасной стартовой клетке до первого попадания.
+        for _ in range(config.switchSteps):
+            env.step([0, 12, int(shield), 0])
+
+        action = [7 if source == "dark" else 0, 12, int(shield), 0]
+        for _ in range(600):
+            _, _, terminated, truncated, info = env.step(action)
+            parts = [info[f"dmg_from_{s}"] for s in ("goo", "tentacle", "dark")]
+            assert np.isclose(sum(parts), info["dmg_taken"]), info
+            if info["dmg_taken"] > 0:
+                expected = {
+                    "goo": config.bossShotPower,
+                    "tentacle": config.bossTentaclePower,
+                    "dark": config.darkSquaresPower * config.dt,
+                }[source]
+                if shield and source != "dark":
+                    expected *= 1 - config.shieldBlock
+                assert np.isclose(info[f"dmg_from_{source}"], expected), info
+                for other in ("goo", "tentacle", "dark"):
+                    if other != source:
+                        assert info[f"dmg_from_{other}"] == 0, info
+                return
+            if terminated or truncated:
+                break
+        raise AssertionError(f"Нет попадания: source={source}, shield={shield}")
+    finally:
+        env.close()
+
+
+for source in ("goo", "tentacle", "dark"):
+    for shield in (False, True):
+        check_damage_source(source, shield)
+
 print("env test OK")

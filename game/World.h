@@ -25,6 +25,9 @@ struct Action {
 struct StepResult {
     float dmgToBoss = 0.f;
     float dmgTaken = 0.f;
+    float dmgFromGoo = 0.f;
+    float dmgFromTentacle = 0.f;
+    float dmgFromDark = 0.f;
     bool bossKilled = false;
     bool playerDead = false;
     bool truncated = false; // достигнут maxSteps
@@ -91,5 +94,5 @@ private:
     bool canShoot() const { return m_Player.mode == Mode::Gun && m_Player.switchTimer == 0; }
     bool canBlock() const { return m_Player.mode == Mode::Shield &&
                                    m_Player.switchTimer == 0; }
-    void damagePlayer(float dmg, bool blockable, StepResult& res);
+    float damagePlayer(float dmg, bool blockable, StepResult& res);
 };

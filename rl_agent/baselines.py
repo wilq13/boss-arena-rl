@@ -7,16 +7,25 @@ EVAL_SEEDS = range(10000, 10100)  # только для оценки, обуче
 def run_episode(env, seed, policy):
     """
     Играет эпизод до конца. policy(obs) -> действие.
-    Возвращает (шаги, сумма наград, terminated, info последнего шага, урон боссу за эпизод).
+    Возвращает (шаги, сумма наград, terminated, info, урон боссу за эпизод).
+    В info добавляет общий полученный урон и его разбивку за весь эпизод.
     """
     obs, _ = env.reset(seed=seed)
     steps, total, dmg = 0, 0.0, 0.0
+    damage_taken = 0.0
+    damage_by_source = {source: 0.0 for source in ("goo", "tentacle", "dark")}
     while True:
         obs, reward, terminated, truncated, info = env.step(policy(obs))
         steps += 1
         total += reward
         dmg += info["dmg_to_boss"]
+        damage_taken += info["dmg_taken"]
+        for source in damage_by_source:
+            damage_by_source[source] += info[f"dmg_from_{source}"]
         if terminated or truncated:
+            info = dict(info)
+            info["episode_damage_taken"] = damage_taken
+            info["episode_damage_by_source"] = damage_by_source
             return steps, total, terminated, info, dmg
 
 
@@ -24,6 +33,9 @@ def evaluate(env_factory, policy_factory, seeds=EVAL_SEEDS):
     wins, win_steps, rewards, boss_dmg = 0, [], [], []
     deaths, timeouts = 0, 0
     loss_steps, loss_boss_hp = [], []
+    damage_taken, loss_damage_taken = [], []
+    damage_by_source = {source: [] for source in ("goo", "tentacle", "dark")}
+    loss_damage_by_source = {source: [] for source in damage_by_source}
     for seed in seeds:
         env = env_factory()
         policy = policy_factory(seed)  # новая стратегия на каждый эпизод
@@ -40,9 +52,16 @@ def evaluate(env_factory, policy_factory, seeds=EVAL_SEEDS):
             loss_steps.append(steps)
             boss_hp_pct = float(env.world.observe()[6]) * 100
             loss_boss_hp.append(boss_hp_pct)
+            loss_damage_taken.append(info["episode_damage_taken"])
+            for source in loss_damage_by_source:
+                loss_damage_by_source[source].append(info["episode_damage_by_source"][source])
 
         rewards.append(total)
         boss_dmg.append(dmg)
+        damage_taken.append(info["episode_damage_taken"])
+        for source in damage_by_source:
+            damage_by_source[source].append(info["episode_damage_by_source"][source])
+        env.close()
 
     return {
         "win_rate": wins / len(seeds),
@@ -57,6 +76,18 @@ def evaluate(env_factory, policy_factory, seeds=EVAL_SEEDS):
         "loss_boss_hp_pct": (
             np.mean(loss_boss_hp) if loss_boss_hp else float("nan")
         ),
+        "damage_taken": float(np.mean(damage_taken)),
+        "damage_by_source": {
+            source: float(np.mean(values))
+            for source, values in damage_by_source.items()
+        },
+        "loss_damage_taken": (
+            float(np.mean(loss_damage_taken)) if loss_damage_taken else float("nan")
+        ),
+        "loss_damage_by_source": {
+            source: float(np.mean(values)) if values else float("nan")
+            for source, values in loss_damage_by_source.items()
+        },
     }
 
 

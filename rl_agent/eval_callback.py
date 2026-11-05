@@ -29,6 +29,14 @@ class WinRateEvalCallback(BaseCallback):
         self.logger.record("eval/win_rate", result["win_rate"])
         self.logger.record("eval/mean_reward", result["reward"])
         self.logger.record("eval/win_steps", result["win_steps"])
+        self.logger.record("eval/damage_taken", result["damage_taken"])
+        self.logger.record("eval/loss_damage_taken", result["loss_damage_taken"])
+        for source, damage in result["damage_by_source"].items():
+            self.logger.record(f"eval/damage_from_{source}", damage)
+            self.logger.record(
+                f"eval/loss_damage_from_{source}",
+                result["loss_damage_by_source"][source],
+            )
         self.logger.dump(step=self.num_timesteps)
 
         print(f"Оценка: победы {result['win_rate']:.1%}")

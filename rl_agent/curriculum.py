@@ -60,3 +60,11 @@ def make_attacks_intro_env():
     config.darkSquaresProportion = 0.0
 
     return BossArenaEnv(config=config)
+
+
+def make_tentacle_only_env():
+    config = bac.Config()
+    config.bossShotFreq = 10**6
+    config.darkSquaresProportion = 0.0
+
+    return BossArenaEnv(config=config)

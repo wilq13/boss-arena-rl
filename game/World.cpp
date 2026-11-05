@@ -44,10 +44,12 @@ void World::reset(uint32_t seed) {
 
 }
 
-void World::damagePlayer(float dmg, bool blockable, StepResult& res) {
+float World::damagePlayer(float dmg, bool blockable, StepResult& res) {
     if (blockable && canBlock()) { dmg *= (1 - m_Cfg.shieldBlock); }
     m_Player.hp -= dmg;
     res.dmgTaken += dmg;
+
+    return dmg;
 }
 
 void World::getObservation(float* out) const {
@@ -228,7 +230,7 @@ StepResult World::step(const Action& a) {
                 const float dx = p.x - m_Player.pos.x;
                 const float dy = p.y - m_Player.pos.y;
                 if (dx*dx + dy*dy < hitR * hitR) {
-                    damagePlayer(m_Cfg.bossShotPower, true, res);
+                    res.dmgFromGoo += damagePlayer(m_Cfg.bossShotPower, true, res);
                     return true;
                 }
                 if (p.x < 0 || p.x > SCREEN_W || p.y < 0 || p.y > SCREEN_H) return true;
@@ -263,7 +265,7 @@ StepResult World::step(const Action& a) {
         const float right = (t.col + 2) * CELL;
         const float x = m_Player.pos.x;
         if (!t.hitDone && x + r > left && x - r < right) {
-            damagePlayer(m_Cfg.bossTentaclePower, true, res);
+            res.dmgFromTentacle += damagePlayer(m_Cfg.bossTentaclePower, true, res);
             t.hitDone = true;
         }
         if (--t.timer <= 0) t.phase = Tentacle::Phase::Idle;
@@ -274,7 +276,9 @@ StepResult World::step(const Action& a) {
     // темные клетки: урон, пока стоишь, щит не помогает
     const int col = static_cast<int>(m_Player.pos.x / CELL);
     const int row = static_cast<int>((m_Player.pos.y - ARENA_TOP) / CELL);
-    if (isDark(col, row)) damagePlayer(m_Cfg.darkSquaresPower * m_Cfg.dt, false, res);
+    if (isDark(col, row)) {
+        res.dmgFromDark += damagePlayer(m_Cfg.darkSquaresPower * m_Cfg.dt, false, res);
+    }
 
     if (m_Player.hp <= 0) {
         m_Player.hp = 0;

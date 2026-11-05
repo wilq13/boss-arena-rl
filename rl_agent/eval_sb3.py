@@ -1,5 +1,5 @@
 from stable_baselines3 import PPO
-from curriculum import make_attacks_env
+from curriculum import make_tentacle_only_env
 from baselines import evaluate
 
 model = PPO.load(
@@ -14,5 +14,5 @@ def sb3_policy(seed):
         return action
     return policy
 
-result = evaluate(make_attacks_env, sb3_policy)
-print(result)
+result = evaluate(make_tentacle_only_env, sb3_policy)
+print("Только щупальце:", result)
