@@ -103,3 +103,13 @@ def make_projectiles_1250_env():
     return BossArenaEnv(config=config)
 
 
+def make_attacks_1250_env():
+    config = bac.Config()
+    config.bossHP = 1250.0
+    config.bossShotFreq = 48
+    config.bossTentacleFreq = 240
+    config.darkSquaresProportion = 0.0
+    config.maxSteps = 7200
+
+    return BossArenaEnv(config=config)
+
