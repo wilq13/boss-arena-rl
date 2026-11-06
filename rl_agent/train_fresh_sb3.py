@@ -8,19 +8,19 @@ from curriculum import make_projectiles_intro_env
 env = Monitor(make_projectiles_intro_env(), info_keywords=("is_success",))
 
 model = PPO.load(
-        "models/fresh_medium/last_model",
+        "models/fresh_projectiles_intro/last_model",
         env=env,
         device="cpu",
 )
 
 model.set_logger(configure(
-    "models/fresh_projectiles_intro/logs",
+    "models/fresh_projectiles_intro_continue/logs",
     ["stdout", "csv"],
 ))
 
 checkpoint = CheckpointCallback(
         save_freq=100_000,
-        save_path="models/fresh_projectiles_intro/checkpoints",
+        save_path="models/fresh_projectiles_intro_continue/checkpoints",
         name_prefix="ppo",
 )
 
@@ -29,5 +29,5 @@ model.learn(total_timesteps=500_000,
             callback=checkpoint,
 )
 
-model.save("models/fresh_projectiles_intro/last_model")
+model.save("models/fresh_projectiles_intro_continue/last_model")
 env.close()
