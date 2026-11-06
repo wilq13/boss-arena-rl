@@ -3,7 +3,7 @@ from curriculum import make_projectiles_intro_env
 from baselines import evaluate
 
 model = PPO.load(
-        "models/fresh_medium/last_model"
+        "models/fresh_projectiles_intro_continue/last_model"
         , device="cpu"
 )
 
