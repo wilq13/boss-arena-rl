@@ -1,5 +1,5 @@
 from stable_baselines3 import PPO
-from curriculum import make_projectiles_500_env
+from curriculum import make_projectiles_intro_env
 from baselines import evaluate
 
 model = PPO.load(
@@ -14,5 +14,5 @@ def sb3_policy(seed):
         return action
     return policy
 
-result = evaluate(make_projectiles_500_env, sb3_policy, seeds=range(10000, 10100))
-print("Босс, 500 HP, только снаряды:", result)
+result = evaluate(make_projectiles_intro_env, sb3_policy, seeds=range(10000, 10100))
+print("Босс, 1000 HP, только снаряды:", result)
