@@ -1,9 +1,9 @@
 from stable_baselines3 import PPO
-from curriculum import make_tentacle_only_env
+from curriculum import make_easy_env
 from baselines import evaluate
 
 model = PPO.load(
-        "models/attacks_2000hp_horizon_continue/best_model"
+        "models/fresh_easy/last_model"
         , device="cpu"
 )
 
@@ -14,5 +14,5 @@ def sb3_policy(seed):
         return action
     return policy
 
-result = evaluate(make_tentacle_only_env, sb3_policy)
-print("Только щупальце:", result)
+result = evaluate(make_easy_env, sb3_policy, seeds=range(10000, 10001))
+print("Простой босс, 200 HP:", result)
