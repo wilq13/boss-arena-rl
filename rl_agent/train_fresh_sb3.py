@@ -14,20 +14,20 @@ model = PPO.load(
 )
 
 model.set_logger(configure(
-    "models/fresh_projectiles_1500/logs",
+    "models/fresh_projectiles_1500_2m/logs",
     ["stdout", "csv"],
 ))
 
 checkpoint = CheckpointCallback(
         save_freq=100_000,
-        save_path="models/fresh_projectiles_1500/checkpoints",
+        save_path="models/fresh_projectiles_1500_2m/checkpoints",
         name_prefix="ppo",
 )
 
-model.learn(total_timesteps=1_000_000, 
+model.learn(total_timesteps=2_000_000, 
             reset_num_timesteps=False,
             callback=checkpoint,
 )
 
-model.save("models/fresh_projectiles_1500/last_model")
+model.save("models/fresh_projectiles_1500_2m/last_model")
 env.close()
