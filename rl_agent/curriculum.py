@@ -68,3 +68,14 @@ def make_tentacle_only_env():
     config.darkSquaresProportion = 0.0
 
     return BossArenaEnv(config=config)
+
+
+def make_projectiles_500_env():
+    config = bac.Config()
+    config.bossHP = 500.0
+    config.bossShotFreq = 48
+    config.bossTentacleFreq = 10**6
+    config.darkSquaresProportion = 0.0
+    config.maxSteps = 1800
+
+    return BossArenaEnv(config=config)
