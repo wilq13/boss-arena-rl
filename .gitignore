@@ -3,3 +3,4 @@ rl_agent/.venv/
 __pycache__/
 *.so
 rl_agent/models/
+/CLAUDE.md
